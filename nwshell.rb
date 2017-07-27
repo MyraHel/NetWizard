@@ -35,32 +35,30 @@ def main
       
     commands.each_with_index do |command, index|
       program, *arguments = Shellwords.shellsplit(command)
-      
-      if builtin?(program)
-
-        call_builtin(program, *arguments)
-
-      else
-        if index+1 < commands.size
-          pipe = IO.pipe
-          placeholder_out = pipe.last
+     
+      begin
+        if builtin?(program)
+          call_builtin(program, *arguments)
         else
-          placeholder_out = $stdout
-        end
+          if index+1 < commands.size
+            pipe = IO.pipe
+            placeholder_out = pipe.last
+          else
+            placeholder_out = $stdout
+          end
 
-        begin
           if (program != nil)
 	    spawn_program(program, *arguments, placeholder_out, placeholder_in)
 	  else
 	    print "\n"
 	  end
-        rescue
-          puts "Cannot execute command: #{program}. Not available or wrong syntax\n"
         end
 
         placeholder_out.close unless placeholder_out == $stdout
         placeholder_in.close unless placeholder_in == $stdin
         placeholder_in = pipe.first
+      rescue => errmsg
+        puts "Error: #{errmsg}\n"
       end
     end
 
