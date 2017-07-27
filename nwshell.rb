@@ -3,7 +3,7 @@
 require 'shellwords'
 require 'readline'
 require 'require_all'
-require_all 'builtins'
+require_all 'lib'
 require 'pry'
 
 
