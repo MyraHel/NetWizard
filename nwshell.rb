@@ -37,6 +37,7 @@ def main
       program, *arguments = Shellwords.shellsplit(command)
       
       if builtin?(program)
+
         call_builtin(program, *arguments)
 
       else
@@ -47,11 +48,15 @@ def main
           placeholder_out = $stdout
         end
 
-        if (program != nil)
-	  spawn_program(program, *arguments, placeholder_out, placeholder_in)
-	else
-	  print "\n"
-	end
+        begin
+          if (program != nil)
+	    spawn_program(program, *arguments, placeholder_out, placeholder_in)
+	  else
+	    print "\n"
+	  end
+        rescue
+          puts "Cannot execute command: #{program}. Not available or wrong syntax\n"
+        end
 
         placeholder_out.close unless placeholder_out == $stdout
         placeholder_in.close unless placeholder_in == $stdin
