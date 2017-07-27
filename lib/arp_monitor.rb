@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require_relative './ArpParams.rb'
+require_relative './arp_params.rb'
 
 def arp_monitor(eth) 
 
