@@ -15,5 +15,9 @@ def spawn_program(program, *arguments, placeholder_out, placeholder_in)
 end
 
 def split_on_pipes(line)
-  line.scan( /([^"'|]+)|["']([^"']+)["']/ ).flatten.compact
+  if line.nil?
+    nil
+  else
+    line.scan( /([^"'|]+)|["']([^"']+)["']/ ).flatten.compact
+  end
 end

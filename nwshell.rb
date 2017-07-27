@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+
 require 'shellwords'
 require 'readline'
 require 'require_all'
@@ -29,6 +30,9 @@ def main
     placeholder_out = $stdout
     pipe = []
 
+    # If input == nil, then readline caught a ^D
+    exit unless ! commands.nil?
+      
     commands.each_with_index do |command, index|
       program, *arguments = Shellwords.shellsplit(command)
       
