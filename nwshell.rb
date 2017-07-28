@@ -38,7 +38,10 @@ def main
      
       begin
         if builtin?(program)
-          call_builtin(program, *arguments)
+
+          # Builtins return a value
+          ret = call_builtin(program, *arguments)
+          puts ret
         else
           if index+1 < commands.size
             pipe = IO.pipe
@@ -50,7 +53,7 @@ def main
           if (program != nil)
 	    spawn_program(program, *arguments, placeholder_out, placeholder_in)
 	  else
-	    print "\n"
+	    puts
 	  end
         end
 
@@ -58,7 +61,7 @@ def main
         placeholder_in.close unless placeholder_in == $stdin
         placeholder_in = pipe.first
       rescue => errmsg
-        puts "Error: #{errmsg}\n"
+        puts "Error: #{errmsg}"
       end
     end
 
