@@ -29,7 +29,6 @@ def arp_scan(target, iface, ip)
 
     puts "Discovering: #{target}, on interface: #{iface}"
 
-    puts ip
     response_scan = PacketFu::Utils.arp(target, :iface => iface, :ip_saddr => ip)
 
     return response_scan
