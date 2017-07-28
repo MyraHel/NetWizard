@@ -5,7 +5,7 @@ BUILTINS = {
   'cd'          => lambda { |dir| Dir.chdir(dir) }, 
   'exit'        => lambda { |code = 0| exit(code.to_i) },
   'quit'        => lambda { |code = 0| exit(code.to_i) },
-  'exec'        => lambda { |*command| exec *command },
+  'exec'        => lambda { |*command| %x(*command) },
   'arp_scan'    => lambda { |target, iface| arp_scan(target, iface) },
   'arp_monitor' => lambda { |eth| arp_monitor(eth) },
   'hist'        => lambda { puts Readline::HISTORY.to_a },
