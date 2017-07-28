@@ -8,6 +8,7 @@ BUILTINS = {
   'exec'        => lambda { |*command| %x(*command) },
   'arp_scan'    => lambda { |target, iface| arp_scan(target, iface) },
   'arp_monitor' => lambda { |eth,verb=0| arp_monitor(eth,verb) },
+  'raw_sniff' => lambda { |eth,verb=0| raw_sniff(eth,verb) },
   'hist'        => lambda { puts Readline::HISTORY.to_a },
   'set'         => lambda { |args|
                       key, value = args.split('=')
