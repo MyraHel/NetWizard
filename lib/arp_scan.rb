@@ -5,17 +5,32 @@ require 'packetfu/protos/eth'
 require 'packetfu/utils'
 
 def usage
-  if !Process.euid.zero?
-    raise SecurityError, "You need to be root to run this."
-  end
+  puts
+  puts "You need to be root/administrator to run this."
 end
 
-
+# Execute an ARP scan
+#
+# target - CIDR block
+# iface  - Ethernet interface to use
+#
+# Examples
+#
+#   arp_scan('192.168.0.0/24', 'eth0')
+#
+# Returns scan result
 def arp_scan(target, iface) 
-  usage unless Process.euid.zero?
-  IPAddr.new(target)
-  print "Discovery: " + target + " On interface: " + iface + "\n"
-  response_scan = PacketFu::Utils.arp(target, :iface => iface)
-  puts response_scan
+  if !Process.euid.zero?
+    usage
+    return nil
+  else
+    IPAddr.new(target)
+
+    puts "Discovering: #{target}, on interface: #{iface}"
+
+    response_scan = PacketFu::Utils.arp(target, :iface => iface)
+
+    return response_scan
+  end
 end
 
