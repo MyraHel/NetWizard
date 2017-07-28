@@ -19,6 +19,6 @@ sudo gem install packetfu require_all coderay method-source pry slop method_sour
 
 ## Usage
 
-./nwshell.rb
+sudo ./nwshell.rb
 
 [TODO]
