@@ -7,7 +7,7 @@ BUILTINS = {
   'quit'        => lambda { |code = 0| exit(code.to_i) },
   'exec'        => lambda { |*command| %x(*command) },
   'arp_scan'    => lambda { |target, iface| arp_scan(target, iface) },
-  'arp_monitor' => lambda { |eth| arp_monitor(eth) },
+  'arp_monitor' => lambda { |eth,verb=0| arp_monitor(eth,verb) },
   'hist'        => lambda { puts Readline::HISTORY.to_a },
   'set'         => lambda { |args|
                       key, value = args.split('=')
