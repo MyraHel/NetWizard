@@ -6,21 +6,51 @@ require 'require_all'
 require_all 'lib'
 require 'pry'
 
+#
+# Smarter Readline to prevent empty and dups
+#   1. Read a line and append to history
+#   2. Quick Break on nil
+#   3. Remove from history if empty or dup
+#
+def readline_with_hist_management
+
+  # Autocompletion based on BUILTINS command list
+  list = BUILTINS.keys.sort
+  comp = proc { |s| list.grep( /^#{Regexp.escape(s)}/ ) }
+  Readline.completion_append_character = " "
+  Readline.completion_proc = comp
+
+  line = Readline.readline(ENV['PROMPT'], true)
+
+  return nil if line.nil?
+
+  if line =~ /^\s*$/ or Readline::HISTORY.to_a[-2] == line
+    Readline::HISTORY.pop
+  else
+    # Otherwise adds the command on a file
+    File.open("#{@HOME}/.nwshell_history", "a+") do |f|
+      f.puts line
+    end
+  end
+
+  line
+end
 
 def main
   loop do
-#    $stdout.print ENV['PROMPT']
-#    line = $stdin.gets.strip
-    line = input = Readline.readline(ENV['PROMPT'], true)
-    Readline::HISTORY.pop if input == ""
+
+    # Puts homedir path into a variable
+    @HOME = File.expand_path('~')
+
+    line = input = readline_with_hist_management
 
     comp = proc do |s|
       directory_list = Dir.glob("#{s}*")
     
       if directory_list.size > 0
-  	    directory_list
+  	directory_list
       else
-	      Readline::HISTORY.grep(/^#{Regexp.escape(s)}/)
+	Readline::HISTORY.grep(/^#{Regexp.escape(s)}/)
       end
     end
 
@@ -30,9 +60,10 @@ def main
     placeholder_out = $stdout
     pipe = []
 
-    # If input == nil, then readline caught a ^D
-    exit unless ! commands.nil?
-      
+    # If input == nil, then readline has caught a ^D
+    exit if commands.nil?
+    
+    # Main loop
     commands.each_with_index do |command, index|
       program, *arguments = Shellwords.shellsplit(command)
      
