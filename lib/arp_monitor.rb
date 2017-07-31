@@ -28,7 +28,8 @@ def arp_monitor(eth,verb)
     if verb == 0
 		  puts "%-15s %-17s -> %-15s %-17s %s %s %s %s %s" % packet_info
     else 
-      puts "verbose: %-15s %-17s -> %-15s %-17s %s %s %s %s %s %s" % packet_info
+      puts "---------------------------------------"
+      pp packet_info
     end
 
 	end
