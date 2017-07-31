@@ -8,7 +8,8 @@ BUILTINS = {
   'exec'        => lambda { |*command| %x(*command) },
   'arp_scan'    => lambda { |target, iface, ip=PacketFu::Utils.ifconfig(iface)[:ip_saddr]| arp_scan(target, iface, ip) },
   'arp_monitor' => lambda { |eth,verb=0| arp_monitor(eth,verb) },
-  'raw_sniff' => lambda { |eth,verb=0| raw_sniff(eth,verb) },
+  'raw_sniff'   => lambda { |eth,verb=0| raw_sniff(eth,verb) },
+  'server'      => lambda { |command| server(command)},
   'hist'        => lambda { puts Readline::HISTORY.to_a },
   'set'         => lambda { |args|
                       key, value = args.split('=')
