@@ -4,6 +4,7 @@ require 'shellwords'
 require 'readline'
 require 'require_all'
 require_all 'lib'
+require_all './lib/readline/history'
 require 'pry'
 
 #
@@ -14,23 +15,20 @@ require 'pry'
 #
 def readline_with_hist_management
 
+  @HISTORY_FILE = ".nwshell_history"
+
   # Autocompletion based on BUILTINS command list
   list = BUILTINS.keys.sort
   comp = proc { |s| list.grep( /^#{Regexp.escape(s)}/ ) }
   Readline.completion_append_character = " "
   Readline.completion_proc = comp
 
+  Readline::History::Restore.new(Dir.home + '/.nwshell_history')
+
   line = Readline.readline(ENV['PROMPT'], true)
 
-  return nil if line.nil?
-
-  if line =~ /^\s*$/ or Readline::HISTORY.to_a[-2] == line
+  if line =~ /^\s*$/ or Readline::HISTORY.to_a[-2] == line or line.nil? or line.strip.length.zero?
     Readline::HISTORY.pop
-  else
-    # Otherwise adds the command on a file
-    File.open("#{@HOME}/.nwshell_history", "a+") do |f|
-      f.puts line
-    end
   end
 
   line
@@ -41,6 +39,10 @@ def main
 
     # Puts homedir path into a variable
     @HOME = File.expand_path('~')
+
+    # Loads settings from file
+    @settings = Settings.instance
+    @settings.load("#{@HOME}/.nwshell.yaml")
 
     line = input = readline_with_hist_management
 
