@@ -10,7 +10,11 @@ def spawn_program(program, *arguments, placeholder_out, placeholder_in)
       placeholder_in.close
     end
     
-    exec program, *arguments
+    begin
+      exec program, *arguments
+    rescue SystemCallError => e
+      puts "Error: #{e}"
+    end
   }
 end
 
