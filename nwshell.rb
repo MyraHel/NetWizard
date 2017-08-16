@@ -23,7 +23,7 @@ def readline_with_hist_management
   Readline.completion_append_character = " "
   Readline.completion_proc = comp
 
-  Readline::History::Restore.new(Dir.home + '/.nwshell_history')
+  Readline::History::Restore.new(Dir.home + "/.#{@HISTORY_FILE}")
 
   line = Readline.readline(ENV['PROMPT'], true)
 
