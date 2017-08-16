@@ -6,7 +6,7 @@ BUILTINS = {
   'exit'        => lambda { |code = 0| exit(code.to_i) },
   'quit'        => lambda { |code = 0| exit(code.to_i) },
   'exec'        => lambda { |*command| %x(*command) },
-  'arp_scan'    => lambda { |target, iface, ip=PacketFu::Utils.ifconfig(iface)[:ip_saddr]| arp_scan(target, iface, ip) },
+  'arp_scan'    => lambda { |target, iface, ip=PacketFu::Utils.whoami?(:iface => iface)[:ip_saddr]| arp_scan(target, iface, ip) },
   'arp_monitor' => lambda { |eth,verb=0| arp_monitor(eth,verb) },
   'raw_sniff'   => lambda { |eth,verb=0| raw_sniff(eth,verb) },
   'server'      => lambda { |command| server(command)},
