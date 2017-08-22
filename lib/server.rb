@@ -4,7 +4,6 @@ def server(command)
   
   trap "SIGINT" do
     puts "Exiting..."
-    ssl_socket.close
     break
   end
   
@@ -20,25 +19,29 @@ def server(command)
   ssl_socket = OpenSSL::SSL::SSLServer.new(nwserver.get_server_socket, ssl_context)
 puts "OK"  
 
-
-  loop do
-    connection = ssl_socket.accept
-    Thread.new {
-      begin
-        while (lineIn = connection.gets)
-          lineIn = lineIn.chomp
-          $stdout.puts "=> " + lineIn
-          lineOut = "You said: " + lineIn
-          $stdout.puts "<= " + lineOut
-          connection.puts lineOut
-        end
-      rescue
-        $stderr.puts $!
-      end
-    }
-  end
-  connection.close
-
+  th_server = Thread.new {
+    loop do
+      connection = ssl_socket.accept
+      th = Thread.new {
+                begin
+                  while (lineIn = connection.gets)
+                    lineIn = lineIn.chomp
+                    $stdout.puts "=> " + lineIn
+                    lineOut = "You said: " + lineIn
+                    $stdout.puts "<= " + lineOut
+                    connection.puts lineOut
+                  end
+                  connection.close
+                rescue
+                  $stderr.puts $!
+                end
+              }
+    end
+    puts "closing"
+  }
+  th_server.join
+  ssl_socket.close
+  th.join
 
   
   if (command == "initssl")

@@ -15,7 +15,8 @@ BUILTINS = {
                       key, value = args.split('=')
                       ENV[key] = value
                           },
-  'logout' => lambda { exit }
+  'logout' => lambda { exit },
+  'banner' => lambda { banner() }
 }
 
 ENV['PROMPT'] = 'nwsh# '
