@@ -7,4 +7,5 @@ gem 'require_all'
 gem 'pry'
 gem 'packetfu', '1.1.12'
 gem 'openssl', '2.0.4'
-gem 'catpix'
+gem 'json'
+# gem 'catpix'  #OPTIONAL
