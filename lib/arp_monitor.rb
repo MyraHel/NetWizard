@@ -12,6 +12,8 @@ require 'json'
 def arp_monitor(eth,verb) 
   
   pairs = Hash.new  
+  pairs["module"]="Arp_Monitor"
+  pairs["data"]= {}
   
   # Traps INT signal.. it's better to exit cleanly ;)
   trap "SIGINT" do
@@ -38,12 +40,12 @@ def arp_monitor(eth,verb)
       pkt.arp_header.body]
     
     # Creates an hash with ip-mac pairs and checks if something was wrong ;)
-    if (pairs.has_key?(pkt.arp_saddr_ip))
-      if not (pairs[pkt.arp_saddr_ip] == pkt.arp_saddr_mac)
+    if (pairs["data"].has_key?(pkt.arp_saddr_ip))
+      if not (pairs["data"][pkt.arp_saddr_ip] == pkt.arp_saddr_mac)
         puts "ARP SPOOFING DETECTED: $#{pkt.arp_saddr_ip}"
       end
     else
-      pairs[pkt.arp_saddr_ip] = pkt.arp_saddr_mac
+      pairs["data"][pkt.arp_saddr_ip] = pkt.arp_saddr_mac
     end
       
     # Are you verbose? 
