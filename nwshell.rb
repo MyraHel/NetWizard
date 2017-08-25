@@ -27,6 +27,7 @@ def readline_with_hist_management
 
   line = Readline.readline(ENV['PROMPT'], true)
 
+  # Remove from history if empty or dup
   if line =~ /^\s*$/ or Readline::HISTORY.to_a[-2] == line or line.nil? or line.strip.length.zero?
     Readline::HISTORY.pop
   end
