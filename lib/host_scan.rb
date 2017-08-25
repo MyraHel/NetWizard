@@ -12,8 +12,8 @@ def host_scan(options = nil)
 
   defaults = {
     ip_addr: '127.0.0.1',
-    ports: '22,7-100',                 # example values: '22', '137,139', '0-1024', '22,137-145,80,8080'
-    flags: ['SYN','ACK'],                   # possible values: 'SYN','ACK','FIN','PSH','RST','URG'
+    ports: '22,7-100',                # example values: '22', '137,139', '0-1024', '22,137-145,80,8080'
+    flags: ['SYN','ACK'],             # possible values: 'SYN','ACK','FIN','PSH','RST','URG'
     protocols: ['TCP']                # possible values: 'TCP','UDP'
   }
 
