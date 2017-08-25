@@ -8,4 +8,6 @@ gem 'pry'
 gem 'packetfu'
 gem 'openssl', '2.0.4'
 gem 'json'
+gem 'celluloid'
+gem 'ipaddr'
 # gem 'catpix'  #OPTIONAL

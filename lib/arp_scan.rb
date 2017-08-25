@@ -20,12 +20,15 @@ end
 #   arp_scan('192.168.0.0/24', 'eth0', '192.168.1.1')
 #
 # Returns scan result
-def arp_scan(target, iface, ip) 
+def arp_scan(target, iface, ip)
   if !Process.euid.zero?
     usage
     return nil
   else
     IPAddr.new(target)
+    Socket.ip_address_list.each do |ip|
+      puts ip.inspect
+    end
 
     puts "Discovering: #{target}, on interface: #{iface}"
 
@@ -34,4 +37,3 @@ def arp_scan(target, iface, ip)
     return response_scan
   end
 end
-
