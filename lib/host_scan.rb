@@ -8,7 +8,7 @@
 #            flags is a comma separated flags list string or an array;
 #            protocol a comma separated protocols list string or an array;
 
-def host_scan(options = nil)
+def host_scan(options = {})
 
   defaults = {
     ip_addr: '127.0.0.1',
@@ -22,39 +22,17 @@ def host_scan(options = nil)
   flags = Array.new
   protocols = Array.new
 
-  if(options.nil?)
-    ip_addr = defaults[:ip_addr]
-    ports = parse_list(defaults[:ports])
-    flags = parse_list(defaults[:flags],false)
-    protocols = parse_list(defaults[:protocols],false)
-  else
-    puts options.inspect
-    puts options.class
-    if(options[:ip_addr].nil?)
-      ip_addr = defaults[:ip_addr]
-    else
-      ip_addr = options[:ip_addr]
-    end
-    if(options[:ports].nil?)
-      ports = parse_list(defaults[:ports])
-    else
-      ports = parse_list(options[:ports])
-    end
-    if(options[:flags].nil?)
-      flags = parse_list(defaults[:flags])
-    else
-      flags = parse_list(options[:flags])
-    end
-    if(options[:protocols].nil?)
-      protocols = parse_list(defaults[:protocols])
-    else
-      protocols = parse_list(options[:protocols])
-    end
-  end
+  options = defaults.merge(options)
 
+  puts options.inspect
+  puts options.class
+
+  ports = parse_list(options[:ports])
+  flags = parse_list(options[:flags])
+  protocols = parse_list(options[:protocols])
 
   puts 'Scanning..'
-  puts ip_addr
+  puts options[:ip_addr]
   puts ports.inspect
   puts flags.inspect
   puts protocols.inspect
