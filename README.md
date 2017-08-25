@@ -4,6 +4,14 @@ Wannabe swissknife for networking.
 
 ## Prerequisites
 
+Make sure you've got libpcap-devel and net-tools installed.
+
+On RedHat distros:
+
+```
+sudo yum install libpcap-devel net-tools
+```
+
 After the clone, install all required gems.
 As a normal user, just:
 

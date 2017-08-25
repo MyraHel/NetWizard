@@ -23,7 +23,11 @@ def readline_with_hist_management
   Readline.completion_append_character = " "
   Readline.completion_proc = comp
 
-  Readline::History::Restore.new(Dir.home + "/.#{@HISTORY_FILE}")
+  Readline::History::Restore.new(Dir.home + "/#{@HISTORY_FILE}")
+
+  # Trapping ^C to prevent users from exiting unadvertently
+  stty_save = `stty -g`.chomp
+  trap('INT') { system('stty', stty_save); exit }
 
   line = Readline.readline(ENV['PROMPT'], true)
 
