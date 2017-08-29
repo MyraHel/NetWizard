@@ -9,7 +9,7 @@ def spawn_program(program, *arguments, placeholder_out, placeholder_in)
       $stdin.reopen(placeholder_in)
       placeholder_in.close
     end
-    
+
     begin
       exec program, *arguments
     rescue SystemCallError => e

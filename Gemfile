@@ -10,4 +10,5 @@ gem 'openssl', '2.0.4'
 gem 'json'
 gem 'celluloid'
 gem 'ipaddr'
+gem 'byebug'
 # gem 'catpix'  #OPTIONAL
