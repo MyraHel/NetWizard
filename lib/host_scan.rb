@@ -20,7 +20,7 @@ def host_scan(options = nil, verbose = true)
   defaults = {
     ip_addr: '127.0.0.1',
     iface: PacketFu::Utils.default_int,
-    ports: '0-512',                   # example values: '22', '137,139', '0-1024', '22,137-145,80,8080'
+    ports: '135,139,445,1025,1032',                   # example values: '22', '137,139', '0-1024', '22,137-145,80,8080'
     flags: ['SYN'],       # possible values: 'SYN','ACK','FIN','PSH','RST','URG'
     protocols: ['TCP']                # possible values: 'TCP','UDP'
   }
@@ -54,7 +54,7 @@ def host_scan(options = nil, verbose = true)
   puts
   STDIN.gets
 
-  listener = PacketFu::Capture.new(:iface => options[:iface], :start => true)
+  listener = PacketFu::Capture.new(:iface => options[:iface], :start => true, :promisc => true)
   # listener.async.run
   ports.each do |port|
     puts "Port #{port}"
@@ -67,6 +67,7 @@ def host_scan(options = nil, verbose = true)
         packet = PacketFu::TCPPacket.new
         packet.ip_daddr = options[:ip_addr]
         packet.ip_saddr = config[:ip_saddr]
+        packet.tcp_win = 29200
         packet.tcp_dst = port
         flags.each do |flag|
           packet.tcp_flags[flag.downcase.to_sym] = 1
