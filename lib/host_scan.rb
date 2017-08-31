@@ -11,16 +11,16 @@
 
 # def host_scan(ip_addr = nil, ports = nil, flags = nil, protocols = nil)
 
-require 'celluloid' #Thread library
+
 
 def host_scan(options = nil, verbose = true)
 
-  # include Celluloid
+
 
   defaults = {
     ip_addr: '127.0.0.1',
     iface: PacketFu::Utils.default_int,
-    ports: '135,139,445,1025,1032',                   # example values: '22', '137,139', '0-1024', '22,137-145,80,8080'
+    ports: '139',                   # example values: '22', '137,139', '0-1024', '22,137-145,80,8080'
     flags: ['SYN'],       # possible values: 'SYN','ACK','FIN','PSH','RST','URG'
     protocols: ['TCP']                # possible values: 'TCP','UDP'
   }
@@ -52,10 +52,14 @@ def host_scan(options = nil, verbose = true)
   puts 'Scanning..'
   puts options
   puts
-  STDIN.gets
+  # STDIN.gets
 
   listener = PacketFu::Capture.new(:iface => options[:iface], :start => true, :promisc => true)
+  STDIN.gets
+
+  # listener.save
   # listener.async.run
+
   ports.each do |port|
     puts "Port #{port}"
     puts
@@ -64,11 +68,13 @@ def host_scan(options = nil, verbose = true)
       puts
       case protocol
       when 'TCP'
-        packet = PacketFu::TCPPacket.new
+        packet = PacketFu::TCPPacket.new(:flavor => "Linux")
+        puts packet.eth_daddr = PacketFu::Utils.arp(options[:ip_addr])
         packet.ip_daddr = options[:ip_addr]
         packet.ip_saddr = config[:ip_saddr]
         packet.tcp_win = 29200
         packet.tcp_dst = port
+        # packet.ip_frag = 0
         flags.each do |flag|
           packet.tcp_flags[flag.downcase.to_sym] = 1
         end
@@ -78,19 +84,23 @@ def host_scan(options = nil, verbose = true)
         raise ArgumentError, "Unknown protocol #{protocol}."
       end
       packet.recalc
-      @show_live = true
+      puts packet.inspect
       # puts packet.tcp_flags.inspect
       # puts packet.ip_header.inspect
       # puts packet.tcp_header.inspect
       # puts packet.tcp_opts.inspect
       # puts packet.inspect if verbose
-      puts packet.to_w(options[:iface])
+      packet.to_w(options[:iface])
+
       # STDIN.gets
     end
   end
+  listener.save
+  puts listener.inspect
   listener.stream.each do | packet |
     pkt = PacketFu::Packet.parse(packet)
-  puts pkt.inspect if pkt.class == PacketFu::TCPPacket && (pkt.ip_saddr == options[:ip_addr] || pkt.ip_daddr == options[:ip_addr])
+    # puts listener.stream.inspect
+    puts pkt.inspect if pkt.class == PacketFu::TCPPacket && (pkt.ip_saddr == options[:ip_addr] || pkt.ip_daddr == options[:ip_addr])
   end
 end
 

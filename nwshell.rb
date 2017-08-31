@@ -53,7 +53,7 @@ def main
 
     comp = proc do |s|
       directory_list = Dir.glob("#{s}*")
-    
+
       if directory_list.size > 0
   	directory_list
       else
@@ -69,11 +69,11 @@ def main
 
     # If input == nil, then readline has caught a ^D
     exit if commands.nil?
-    
+
     # Main loop
     commands.each_with_index do |command, index|
       program, *arguments = Shellwords.shellsplit(command)
-     
+
       begin
         if builtin?(program)
 
