@@ -2,24 +2,23 @@
 
 # Active host scan
 # Tries differently flagged packets on host's ports
-# Usage: host_scan(ip_addr, ports, flags, protocols)
-#      where ip_addr is an address string
+# Usage: host_scan(ip_daddr, ports, flags, protocols)
+#      where ip_daddr is an address string
 #            iface is a string representing an interface
 #            ports is a comma separated ports list string, including dash separated ranges or an array;
 #            flags is a comma separated flags list string or an array;
 #            protocol a comma separated protocols list string or an array;
 
-# def host_scan(ip_addr = nil, ports = nil, flags = nil, protocols = nil)
-
 
 
 def host_scan(options = nil, verbose = true)
 
-
+  # config will determine the ifconfig data for iface
+  config = PacketFu::Utils.ifconfig(PacketFu::Utils.default_int)
 
   defaults = {
-    ip_addr: '127.0.0.1',
-    iface: PacketFu::Utils.default_int,
+    ip_daddr: config[:ip_saddr] || '127.0.0.1',
+    iface: config[:iface],
     ports: '139',                   # example values: '22', '137,139', '0-1024', '22,137-145,80,8080'
     flags: ['SYN'],       # possible values: 'SYN','ACK','FIN','PSH','RST','URG'
     protocols: ['TCP']                # possible values: 'TCP','UDP'
@@ -31,16 +30,14 @@ def host_scan(options = nil, verbose = true)
 
   options = defaults.merge(options)
 
-  ip_addr = options[:ip_addr].split '.'
-  ip_addr.each_with_index do |o,i|
-    ip_addr[i] = o.to_i
-  end
+  # ip_addr = options[:ip_daddr].split '.'
+  # ip_addr.each_with_index do |o,i|
+  #   ip_addr[i] = o.to_i
+  # end
   ports = parse_list(options[:ports])
   flags = parse_list(options[:flags])
   protocols = parse_list(options[:protocols])
 
-  # config will determine the ifconfig data for iface
-  config = PacketFu::Utils.ifconfig(options[:iface])
 
   # print out some of the relevant information
   puts
@@ -52,7 +49,6 @@ def host_scan(options = nil, verbose = true)
   puts 'Scanning..'
   puts options
   puts
-  # STDIN.gets
 
   listener = PacketFu::Capture.new(:iface => options[:iface], :start => true, :promisc => true)
   STDIN.gets
@@ -69,12 +65,13 @@ def host_scan(options = nil, verbose = true)
       case protocol
       when 'TCP'
         packet = PacketFu::TCPPacket.new(:flavor => "Linux")
-        puts packet.eth_daddr = PacketFu::Utils.arp(options[:ip_addr])
-        packet.ip_daddr = options[:ip_addr]
+        # packet.eth_daddr = PacketFu::Utils.arp(options[:ip_daddr],iface: options[:iface])
+        packet.eth_saddr = config[:eth_saddr]
+        packet.ip_daddr = options[:ip_daddr]
         packet.ip_saddr = config[:ip_saddr]
         packet.tcp_win = 29200
         packet.tcp_dst = port
-        # packet.ip_frag = 0
+        packet.ip_frag = 0
         flags.each do |flag|
           packet.tcp_flags[flag.downcase.to_sym] = 1
         end
@@ -100,7 +97,7 @@ def host_scan(options = nil, verbose = true)
   listener.stream.each do | packet |
     pkt = PacketFu::Packet.parse(packet)
     # puts listener.stream.inspect
-    puts pkt.inspect if pkt.class == PacketFu::TCPPacket && (pkt.ip_saddr == options[:ip_addr] || pkt.ip_daddr == options[:ip_addr])
+    puts pkt.inspect if pkt.class == PacketFu::TCPPacket && (pkt.ip_saddr == options[:ip_daddr] || pkt.ip_daddr == options[:ip_daddr])
   end
 end
 
