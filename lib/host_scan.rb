@@ -56,7 +56,53 @@ def host_scan(options = nil, verbose = true)
   puts 'Destination MAC: '+eth_daddr
   puts
 
-  listener = PacketFu::Capture.new(:iface => options[:iface], :start => true, :promisc => true)
+  time = Time.now.getutc
+  Thread.new {
+    listener = PacketFu::Capture.new(:iface => options[:iface], :start => true, :promisc => true, :save => true, :timeout => timeout)
+    packets = Array.new
+    listener.stream.each do | packet |
+      pkt = PacketFu::Packet.parse(packet)
+      if pkt.nil?
+        puts 'Nil packet?!'
+        puts packet.inspect
+      else
+        begin
+          # puts pkt.inspect
+          case pkt.eth_proto
+          when 0x800 #IPv4
+            src = pkt.ip_saddr || pkt.ip_src
+            dst = pkt.ip_daddr || pkt.ip_dst
+            if src == options[:ip_daddr] && dst == options[:ip_saddr]
+              unless pkt.tcp_header.nil?
+                puts
+                puts src+' --> '+dst
+                puts 'Port: '+pkt.tcp_src.to_s
+                puts pkt.tcp_flags
+                # puts pkt.tcp_header.inspect
+              else
+                puts 'No tcp'
+                # puts pkt.inspect
+              end
+            end
+          when 0x86dd # IPv6
+
+          when 0x806 # ARP
+
+          else
+            puts
+            puts 'Unrecognized'
+            puts pkt.inspect
+          end
+        rescue
+          puts
+          puts 'Trouble..'
+          puts pkt.to_s
+        end
+      end
+      return if (Time.now.getutc - time) > timeout
+    end
+  }
+
   sent_packets = Hash.new
 
   # listener.save
@@ -93,99 +139,6 @@ def host_scan(options = nil, verbose = true)
     end
   end
 
-  # ports.each do |port|
-  #   # puts
-  #   # puts "Port #{port}"
-  #   packets[port.to_s] = Hash.new
-  #   protocols.each do |protocol|
-  #     # puts "Protocol #{protocol} (flags: #{flags.join(', ')})"
-  #     packets[port.to_s][protocol.to_sym] = Hash.new :send => nil, :return => nil
-  #     case protocol
-  #     when 'TCP'
-  #       packet = PacketFu::TCPPacket.new(:flavor => "Linux")
-  #       packet.eth_daddr = eth_daddr
-  #       packet.eth_saddr = config[:eth_saddr]
-  #       packet.ip_daddr = options[:ip_daddr]
-  #       packet.ip_saddr = config[:ip_saddr]
-  #       packet.tcp_win = 29200
-  #       packet.tcp_dst = port
-  #       packet.ip_frag = 0
-  #       flags.each do |flag|
-  #         packet.tcp_flags[flag.downcase.to_sym] = 1
-  #       end
-  #     when 'UDP'
-  #       packet = PacketFu::UDPPacket.new
-  #     else
-  #       raise ArgumentError, "Unknown protocol #{protocol}."
-  #     end
-  #     packet.recalc
-  #     # puts packet.inspect
-  #     # packet.to_w(options[:iface])
-  #     # packets[protocol.to_sym][port.to_s]
-  #     sent_packets[protocol.to_sym][port.to_s][:send] = packet
-  #     # STDIN.gets
-  #   end
-  # end
-  # listener.save
-
-    # puts packets.inspect
-  # packets.each do |port,cont|
-  #   cont.each do |protocol,pkts|
-  #
-  #     # pkts.each do |packt|
-  #       # puts packt.inspect
-  #       puts packt.inspect
-  #       pkts[:send].to_w(options[:iface])
-  #     # end
-  #   end
-  # end
-  # puts 'Packets sent..'
-  # puts
-  # sleep 3
-  listener.save
-  time = Time.now.getutc
-  packets = Array.new
-  listener.stream.each do | packet |
-    pkt = PacketFu::Packet.parse(packet)
-    if pkt.nil?
-      puts 'Nil packet?!'
-      puts packet.inspect
-    else
-      begin
-        # puts pkt.inspect
-        case pkt.eth_proto
-        when 0x800 #IPv4
-          src = pkt.ip_saddr || pkt.ip_src
-          dst = pkt.ip_daddr || pkt.ip_dst
-          if (src == options[:ip_daddr] && dst == options[:ip_saddr]) || (src == options[:ip_saddr] && dst == options[:ip_daddr])
-            unless pkt.tcp_header.nil?
-              puts src+' --> '+dst
-              puts 'Port: '+pkt.tcp_src.to_s
-              puts pkt.tcp_flags
-              # puts pkt.tcp_header.inspect
-            else
-              puts 'No tcp'
-              # puts pkt.inspect
-            end
-          end
-        when 0x86dd # IPv6
-
-        when 0x806 # ARP
-
-        else
-          puts
-          puts 'Unrecognized'
-          puts pkt.inspect
-        end
-      rescue
-        puts
-        puts 'Trouble..'
-        puts pkt.to_s
-      end
-    end
-
-    break if (Time.now.getutc - time) > timeout
-  end
   puts packets.inspect
 end
 
