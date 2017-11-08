@@ -32,6 +32,7 @@ def host_scan(options = nil, verbose = true)
 
   options = defaults.merge(options)
 
+
   # ip_addr = options[:ip_daddr].split '.'
   # ip_addr.each_with_index do |o,i|
   #   ip_addr[i] = o.to_i
@@ -40,7 +41,9 @@ def host_scan(options = nil, verbose = true)
   flags = parse_list(options[:flags])
   protocols = parse_list(options[:protocols])
 
+  timeout = ports.size * 2 if protocols.include? 'UDP'
   sent_packets = Hash.new
+  udp_packets = Hash.new
   packets = Array.new
   # print out some of the relevant information
   puts
@@ -73,7 +76,7 @@ def host_scan(options = nil, verbose = true)
           when 0x800 #IPv4
             src = pkt.ip_saddr || pkt.ip_src
             dst = pkt.ip_daddr || pkt.ip_dst
-            if (src == options[:ip_daddr] && dst == options[:ip_saddr])# || (src == options[:ip_saddr] && dst == options[:ip_daddr])
+            if (src == options[:ip_daddr] && dst == options[:ip_saddr]) || (src == options[:ip_saddr] && dst == options[:ip_daddr])
               if pkt.nil?
                 puts 'Nil packet?!'
                 puts packet.inspect
@@ -83,6 +86,16 @@ def host_scan(options = nil, verbose = true)
               when 0x01 # 1 - ICMP
                 puts 'ICMP'
                 puts pkt.inspect
+                payload = pkt.payload.to_s
+                udp_packets.keys.each do |port|
+                  sent_packets['UDP'][port.to_s] = 'Closed' if udp_packets[port.to_s] === payload
+                  puts '.................................'
+                  puts payload.to_s(16)
+                  puts '.................................'
+                  puts '.................................'
+                  puts udp_packets[port.to_s].to_s(16)
+                  puts '.................................'
+                end
               when 0x06 # 6 - TCP
                   if pkt.tcp_flags.rst == 1
                     state = 'Filtered'
@@ -175,7 +188,6 @@ def host_scan(options = nil, verbose = true)
         flags.each do |flag|
           packet.tcp_flags[flag.downcase.to_sym] = 1
         end
-        firstbytes = nil
       when 'UDP'
         packet = PacketFu::UDPPacket.new()
         packet.eth_daddr = eth_daddr
@@ -186,9 +198,7 @@ def host_scan(options = nil, verbose = true)
         packet.udp_dst = port
         packet.udp_src = rand(0xffff-1024) + 1024
         # copy first 8 bytes of raw packet for icmp comparation
-        # firstbytes = packet
-        # firstbytes >> 64
-        # puts firstbytes.inspect
+        udp_packets[port.to_s] = packet.to_s[0,8]
         # packet.ip_frag = 0
         # flags.each do |flag|
         #   packet.udp_flags[flag.downcase.to_sym] = 1
@@ -199,11 +209,11 @@ def host_scan(options = nil, verbose = true)
       packet.recalc
       # packet.to_w(options[:iface])
       # packets[protocol.to_sym][port.to_s]
-
-      sent_packets[protocol][port.to_s] = firstbytes
+      puts protocol
+      sent_packets[protocol][port.to_s] = nil
       packet.to_w(options[:iface])
     end
   end
   thread.join
-
+  puts sent_packets
 end
