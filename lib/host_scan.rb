@@ -13,6 +13,26 @@ require_relative './common_functions.rb'
 
 def host_scan(options = nil, verbose = true)
 
+  # help
+  if options.include?('--help') || options.include?('-h')
+    puts <<-HELP
+      Host scan:
+      Scans for open ports on specified host.
+
+      Options:
+        -d: destination address(es). Default: configured own ip address or 127.0.0.1.
+        -s: source address. Default: configured own ip address or 127.0.0.1.
+        -i: net interface.
+        -p: target port(s). Format: comma sparated number or ranges list string. Default: '0-1024'
+        -f: active flags. Format: strings array. Possible values: 'SYN','ACK','FIN','PSH','RST','URG', Default: ['SYN']
+        -P: test protocols. Format: strings array. Default: ['TCP','UDP']
+
+        Examples:
+        host_scan ip_daddr: '192.168.1.5' ip_saddr: '192.168.1.100', iface: 'wlan0', ports: '25,143,135-139', flags: ['SYN','ACK'], protocols: ['TCP']
+
+    HELP
+    return
+  end
   # config will determine the ifconfig data for iface
   config = PacketFu::Utils.ifconfig(PacketFu::Utils.default_int)
   timeout = 60
@@ -20,42 +40,84 @@ def host_scan(options = nil, verbose = true)
   defaults = {
     ip_daddr: config[:ip_saddr] || '127.0.0.1',
     ip_saddr: config[:ip_saddr] || '127.0.0.1',
+    eth_saddr: config[:eth_saddr],
     iface: config[:iface],
-    ports: '22,80,135-139,445',                   # example values: '22', '137,139', '0-1024', '22,137-145,80,8080'
+    ports: '0-1024',                   # example values: '22', '137,139', '0-1024', '22,137-145,80,8080'
     flags: ['SYN'],                               # possible values: 'SYN','ACK','FIN','PSH','RST','URG'
-    protocols: ['TCP','UDP']                            # possible values: 'TCP','UDP','ICMP'
+    protocols: ['TCP','UDP']                      # possible values: 'TCP','UDP','ICMP'
   }
 
   ports = Array.new
   flags = Array.new
   protocols = Array.new
+  opts = Hash.new
+  argument = false
 
-  options = defaults.merge(options)
+  #apply options
+  options.each_with_index do |v,i|
+
+    #skip if it's the argument to the previous option
+    if argument
+      argument = false
+      next
+    end
+
+    case v
+    when '-d' then
+      opts[:ip_daddr] = options[i+1]
+      argument = true
+    when '-s' then
+      opts[:ip_saddr] = options[i+1]
+      argument = true
+    when '-i' then
+      opts[:iface] = options[i+1]
+      argument = true
+    when '-p' then
+      opts[:ports] = options[i+1]
+      argument = true
+    when '-P' then
+      opts[:protocols] = options[i+1].split(',').map{|p| p.upcase }
+      argument = true
+    when '-f' then
+      opts[:flags] = options[i+1].split(',').map{|f| f.upcase }
+      argument = true
+    else
+      raise "Unrecognized option \"#{v}\""
+    end
+  end
+
+  options = defaults.merge(opts)
 
 
   # ip_addr = options[:ip_daddr].split '.'
   # ip_addr.each_with_index do |o,i|
   #   ip_addr[i] = o.to_i
   # end
+  # ip_addr = options[:ip_daddr].split('.').map{ |a| a.to_i }
   ports = parse_list(options[:ports]).sort
   flags = parse_list(options[:flags])
-  protocols = parse_list(options[:protocols])
+  protocols = options[:protocols]
 
-  timeout = ports.size * 2 if protocols.include? 'UDP'
+  if protocols.include? 'UDP'
+    timeout = ports.size * 2
+  else
+    timeout = ports.size
+  end
   sent_packets = Hash.new
   udp_packets = Hash.new
   packets = Array.new
+
   # print out some of the relevant information
   puts
-  puts "      iface: " + config[:iface]
-  puts "mac address: " + config[:eth_saddr]
-  puts "   local ip: " + config[:ip_saddr]
+  puts "      iface: " + options[:iface]
+  puts "mac address: " + options[:eth_saddr]
+  puts "   local ip: " + options[:ip_saddr]
   puts "    Timeout: #{timeout}s"
   puts
 
 
-  puts 'Scanning..'
-  puts options
+  puts "Scanning #{options[:ip_daddr]}.."
+
   eth_daddr = PacketFu::Utils.arp(options[:ip_daddr], :iface => options[:iface], :timeout => 7, :flavor => 'Linux')
   puts 'Destination MAC: '+eth_daddr
   puts
@@ -66,6 +128,7 @@ def host_scan(options = nil, verbose = true)
     listener = PacketFu::Capture.new(:iface => options[:iface], :start => true, :promisc => true, :save => true, :timeout => timeout)
     listener.stream.each do | packet |
       pkt = PacketFu::Packet.parse(packet)
+
       if pkt.nil?
         puts 'Nil packet?!'
         puts packet.inspect
@@ -76,7 +139,7 @@ def host_scan(options = nil, verbose = true)
           when 0x800 #IPv4
             src = pkt.ip_saddr || pkt.ip_src
             dst = pkt.ip_daddr || pkt.ip_dst
-            if (src == options[:ip_daddr] && dst == options[:ip_saddr]) || (src == options[:ip_saddr] && dst == options[:ip_daddr])
+            if (src == options[:ip_daddr] && dst == options[:ip_saddr]) #|| (src == options[:ip_saddr] && dst == options[:ip_daddr])
               if pkt.nil?
                 puts 'Nil packet?!'
                 puts packet.inspect
@@ -142,14 +205,30 @@ def host_scan(options = nil, verbose = true)
 
           else
             puts
-            puts 'Unrecognized'
+            puts 'Unrecognized' + pkt.eth_proto
             puts pkt.inspect
           end
-        rescue => e
-          puts
-          puts 'Trouble..'
-          puts e
-          puts pkt.to_s
+        rescue Exception => e
+          begin
+            puts
+            puts 'Trouble..'
+            puts e.message
+            puts
+            puts pkt.to_s
+            puts
+            puts pkt.inspect
+            puts
+            puts pkt.headers.inspect
+
+            puts
+            puts e.backtrace.join("\n")
+          rescue Exception => e2
+            puts 'Double troble..!'
+            puts
+            puts e2.message
+            puts
+            puts e2.backtrace.join("\n")
+          end
         end
       end
       finished = true
@@ -167,7 +246,6 @@ def host_scan(options = nil, verbose = true)
       end
     end
   }
-
 
   # listener.save
   # listener.async.run
@@ -209,7 +287,7 @@ def host_scan(options = nil, verbose = true)
       packet.recalc
       # packet.to_w(options[:iface])
       # packets[protocol.to_sym][port.to_s]
-      puts protocol
+      # puts protocol
       sent_packets[protocol][port.to_s] = nil
       packet.to_w(options[:iface])
     end
