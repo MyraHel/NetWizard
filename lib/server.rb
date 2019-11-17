@@ -1,4 +1,5 @@
 require_relative './nw_server.rb'
+require_relative './builtins.rb'
 
 def server(command)
   
@@ -28,9 +29,16 @@ def server(command)
                     while (lineIn = connection.gets)
                       lineIn = lineIn.chomp
                       $stdout.puts "=> " + lineIn
-                      lineOut = "You said: " + lineIn
-                      $stdout.puts "<= " + lineOut
-                      connection.puts lineOut
+                      program, *arguments = Shellwords.shellsplit(lineIn)
+                      if builtin?(program) 
+                        # lineOut = "You said: " + lineIn
+                        # $stdout.puts "<= " + lineOut
+                        # connection.puts lineOut
+ 
+                        # Builtins return a value
+                        ret = call_builtin(program, *arguments)
+                        connection.puts ret
+                      end
                     end
                     connection.close
                   rescue
@@ -44,9 +52,9 @@ def server(command)
     ssl_socket.close
     th.join
   end
-  
+  puts("COMMAND:" + command)
   if (command == "initssl")
-    nwserver.initssl
+    NWServer.initssl
   end
   
 end

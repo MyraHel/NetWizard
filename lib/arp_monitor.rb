@@ -9,7 +9,7 @@
 require_relative './arp_params.rb'
 require 'json'
 
-def arp_monitor(eth,verb) 
+def arp_monitor(eth,verb, count) 
   
   pairs = Hash.new  
   pairs["module"]="Arp_Monitor"
@@ -22,6 +22,12 @@ def arp_monitor(eth,verb)
     # break
   end
   
+  if count == '0' 
+    guard = -1
+  else  
+    guard = count.to_i
+  end
+
   # Init capture with static filter "ARP" and parses packets
   cap = PacketFu::Capture.new(:iface => eth, :filter => 'arp', :start => true)
   cap.stream.each do |p|
@@ -57,7 +63,11 @@ def arp_monitor(eth,verb)
         pp packet_info
       end
     end
+puts guard
+    guard = guard - 1
+    break if guard == 0
 
   end
 
+  return pairs.to_json
 end

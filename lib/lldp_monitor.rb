@@ -9,9 +9,10 @@ def lldp_monitor(eth,verb)
   end
   
 
-	cap = PacketFu::Capture.new(:iface => eth, :filter => '(ether[12:2]=0x88cc)', :start => true)
+	cap = PacketFu::Capture.new(:iface => eth, :filter => '(ether[12:2]=0x88cc) or (ether[12:2]=0x88A8)', :start => true)
 	cap.stream.each do |p|
-		pkt = PacketFu::Packet.parse p
+    pkt = PacketFu::Packet.parse p
+      pp pkt
 
     packet_info = [
       pkt.arp_saddr_ip, 

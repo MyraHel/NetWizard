@@ -7,7 +7,7 @@ BUILTINS = {
   'quit'        => lambda { |code = 0| exit(code.to_i) },
   'exec'        => lambda { |*command| %x(*command) },
   'arp_scan'    => lambda { |target, iface, ip=PacketFu::Utils.whoami?(:iface => iface)[:ip_saddr]| arp_scan(target, iface, ip) },
-  'arp_monitor' => lambda { |eth,verb=0| arp_monitor(eth,verb) },
+  'arp_monitor' => lambda { |eth,verb=0,count=0| arp_monitor(eth,verb,count) },
   'host_scan'   => lambda { |*options| host_scan(options) },
   # 'host_scan'   => lambda { |ip_daddr = nil, iface = nil, ports = nil,flags = nil,protocols = nil|
   #                             options = Hash.new
