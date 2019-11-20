@@ -19,7 +19,7 @@ As a normal user, just:
 bundle install
 ```
 
-But, since many command must run as root, install all gems as root too:
+But, since many commands must run as root, you must install all gems as `root`, too:
 
 ```
 sudo gem install packetfu require_all coderay method-source pry slop method_source
@@ -27,6 +27,6 @@ sudo gem install packetfu require_all coderay method-source pry slop method_sour
 
 ## Usage
 
-sudo ./nwshell.rb
+`sudo ./nwshell.rb`
 
 [TODO]
